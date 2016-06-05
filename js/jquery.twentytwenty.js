@@ -1,7 +1,14 @@
 (function($){
 
   $.fn.twentytwenty = function(options) {
-    var options = $.extend({default_offset_pct: 0.5, orientation: 'horizontal'}, options);
+
+    var options = $.extend({
+      default_offset_pct:   0.5,
+      orientation:          'horizontal',
+      overlay:              false,
+      padding:              100,
+    }, options);
+
     return this.each(function() {
 
       var sliderPct = options.default_offset_pct;
@@ -9,10 +16,13 @@
       var sliderOrientation = options.orientation;
       var beforeDirection = (sliderOrientation === 'vertical') ? 'down' : 'left';
       var afterDirection = (sliderOrientation === 'vertical') ? 'up' : 'right';
-      
-      
+
       container.wrap("<div class='twentytwenty-wrapper twentytwenty-" + sliderOrientation + "'></div>");
-      container.append("<div class='twentytwenty-overlay'></div>");
+
+      if (options.overlay){
+        container.append("<div class='twentytwenty-overlay'></div>");
+      }
+
       var beforeImg = container.find("img:first");
       var afterImg = container.find("img:last");
       container.append("<div class='twentytwenty-handle'></div>");
@@ -22,29 +32,33 @@
       container.addClass("twentytwenty-container");
       beforeImg.addClass("twentytwenty-before");
       afterImg.addClass("twentytwenty-after");
-      
-      var overlay = container.find(".twentytwenty-overlay");
-      overlay.append("<div class='twentytwenty-before-label'></div>");
-      overlay.append("<div class='twentytwenty-after-label'></div>");
+
+      if (options.overlay){
+        var overlay = container.find(".twentytwenty-overlay");
+        overlay.append("<div class='twentytwenty-before-label'></div>");
+        overlay.append("<div class='twentytwenty-after-label'></div>");
+      }
 
       var calcOffset = function(dimensionPct) {
         var w = beforeImg.width();
         var h = beforeImg.height();
+        var cw = Math.min( Math.max( dimensionPct*w , options.padding ), w-options.padding );
+        var ch = Math.min( Math.max( dimensionPct*h , options.padding ), h-options.padding );
         return {
           w: w+"px",
           h: h+"px",
-          cw: (dimensionPct*w)+"px",
-          ch: (dimensionPct*h)+"px"
+          cw: cw+"px",
+          ch: ch+"px"
         };
       };
 
       var adjustContainer = function(offset) {
-      	if (sliderOrientation === 'vertical') {
-      	  beforeImg.css("clip", "rect(0,"+offset.w+","+offset.ch+",0)");
-      	}
-      	else {
+        if (sliderOrientation === 'vertical') {
+          beforeImg.css("clip", "rect(0,"+offset.w+","+offset.ch+",0)");
+        }
+        else {
           beforeImg.css("clip", "rect(0,"+offset.cw+","+offset.h+",0)");
-    	}
+        }
         container.css("height", offset.h);
       };
 
@@ -60,7 +74,7 @@
 
       var offsetX = 0;
       var imgWidth = 0;
-      
+
       slider.on("movestart", function(e) {
         if (((e.distX > e.distY && e.distX < -e.distY) || (e.distX < e.distY && e.distX > -e.distY)) && sliderOrientation !== 'vertical') {
           e.preventDefault();
@@ -71,8 +85,8 @@
         container.addClass("active");
         offsetX = container.offset().left;
         offsetY = container.offset().top;
-        imgWidth = beforeImg.width(); 
-        imgHeight = beforeImg.height();          
+        imgWidth = beforeImg.width();
+        imgHeight = beforeImg.height();
       });
 
       slider.on("moveend", function(e) {
